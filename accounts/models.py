@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-from managers import CustomUserManager
+from .managers import CustomUserManager
 
 # Create your models here.
 ROLE_CHOICES = (
@@ -19,7 +19,6 @@ CATEGORY_CHOICES = [
 class User(AbstractBaseUser):
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=2, choices=ROLE_CHOICES, default='CU')
-
     USERNAME_FIELD = 'email'
 
     objects = CustomUserManager()
@@ -29,10 +28,18 @@ class User(AbstractBaseUser):
 
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    username = models.CharField(max_length=20, blank=True)
     
 class Company(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    username = models.CharField(max_length=20, blank=True)
     category = models.CharField(max_length=10, choices=CATEGORY_CHOICES, default='other')
+
+class AccountInformation(models.Model):
+    company = models.OneToOneField(Company, on_delete=models.CASCADE, related_name='bank')
+    username = models.CharField(max_length=20, blank=True)
+    bankName = models.CharField(max_length=20, blank=True)
+    accountNumber = models.CharField(max_length=30, blank=True)
 
 class Review(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='reviews')
