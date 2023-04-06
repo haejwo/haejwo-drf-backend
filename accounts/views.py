@@ -44,3 +44,37 @@ class ProfileViewSet(viewsets.ModelViewSet):
                 return Response(company_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({'error': 'Invalid role.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+from rest_framework.views import APIView
+from rest_framework.parsers import FileUploadParser
+from google.cloud import vision
+from google.cloud.vision_v1 import types
+from django.conf import settings
+import os
+from rest_framework import authentication, permissions
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
+from rest_framework.decorators import parser_classes
+from rest_framework.parsers import FileUploadParser
+from rest_framework.renderers import JSONRenderer
+from django.http import JsonResponse
+
+@parser_classes([FileUploadParser])
+@csrf_exempt
+def image(request):
+    BASE_DIR = settings.BASE_DIR
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"]=os.path.join(BASE_DIR,"secret.json")
+    file_obj = request.FILES.get('image')
+    image = types.Image(content=file_obj.read())
+    client = vision.ImageAnnotatorClient()
+
+    response = client.text_detection(image=image)
+    texts = response.text_annotations
+    text_list = list(map(lambda x: x.description, texts))
+    if response.error.message:
+        raise Exception(
+            '{}\nFor more info on error messages, check: '
+            'https://cloud.google.com/apis/design/errors'.format(
+                response.error.message))
+    return JsonResponse({'text': text_list})

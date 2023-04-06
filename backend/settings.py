@@ -44,15 +44,15 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email' # 로그인 인증 수단
 ACCOUNT_EMAIL_VERIFICATION = 'none' # Email 인증 필수 여부
 
 #jwt인증 default 설정
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
-    ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.SessionAuthentication',
-        'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
-    ),
-}
+# REST_FRAMEWORK = {
+#     'DEFAULT_PERMISSION_CLASSES': (
+#         'rest_framework.permissions.IsAuthenticated',
+#     ),
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework.authentication.SessionAuthentication',
+#         'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
+#     ),
+# }
 #시리얼라이저 설정
 REST_AUTH_SERIALIZERS = {
     'USER_DETAILS_SERIALIZER': 'accounts.serializers.UserSerializer',
@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'allauth',
     'allauth.account',
+    'corsheaders',
     'allauth.socialaccount',
     'django.contrib.sites',
     'django.contrib.admin',
@@ -77,6 +78,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -85,7 +87,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+CORS_ORIGIN_ALLOW_ALL = True
 ROOT_URLCONF = 'backend.urls'
 
 TEMPLATES = [
