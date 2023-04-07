@@ -13,4 +13,11 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
         return self.create_user(email, password, **extra_fields)
+    
+    def has_module_perms(self, app_label):
+        return True
+    
+    def has_perm(self, user_obj, perm, obj=None):
+        return True
