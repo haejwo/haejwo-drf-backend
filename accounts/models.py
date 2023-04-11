@@ -38,6 +38,8 @@ class Company(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     username = models.CharField(max_length=20, blank=True)
     category = models.CharField(max_length=10, choices=CATEGORY_CHOICES, default='other')
+    has_business_license = models.BooleanField(default=False)
+    has_cdl = models.BooleanField(default=False)
 
 class AccountInformation(models.Model):
     company = models.OneToOneField(Company, on_delete=models.CASCADE, related_name='bank')
