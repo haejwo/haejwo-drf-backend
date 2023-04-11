@@ -1,17 +1,33 @@
-import http.client
-
-conn = http.client.HTTPSConnection("api.tosspayments.com")
-
-payload = "{\"amount\":15000,\"orderId\":\"jySnp0l-iAWOmqG4_1LYv\",\"orderName\":\"토스 티셔츠 외 2건\",\"customerName\":\"박토스\",\"bank\":\"20\",\"cashReceipt\":{\"type\":\"소득공제\",\"registrationNumber\":\"01011111111\"}}"
-
-headers = {
-    'Authorization': "Basic test_ck_k6bJXmgo28eEod9R91Y8LAnGKWx4",
-    'Content-Type': "application/json"
+import requests
+import json, os
+from dotenv import load_dotenv
+load_dotenv()
+# 요청에 필요한 데이터
+data = {
+  "businesses": [
+    {
+      "b_no": "2018187900",
+      "start_dt": "20040702",
+      "p_nm": "박건원",
     }
+  ]
+}
 
-conn.request("POST", "/v1/virtual-accounts", payload, headers)
+# API 엔드포인트 URL과 서비스 키
+url = "https://api.odcloud.kr/api/nts-businessman/v1/validate"
+service_key = os.getenv("DATA_KEY")
 
-res = conn.getresponse()
-data = res.read()
+# POST 요청 보내기
+response = requests.post(
+    url,
+    params={"serviceKey": service_key},
+    data=json.dumps(data),
+    headers={"Content-Type": "application/json", "Accept": "application/json"}
+)
 
-print(data.decode("utf-8"))
+# 응답 결과 확인
+if response.status_code == 200:
+    result = response.json()
+    print(result['data'][0].get('status'))
+else:
+    print(response.text)  # 에러 메시지 확인

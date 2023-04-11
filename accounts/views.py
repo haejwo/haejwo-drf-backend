@@ -7,7 +7,6 @@ from rest_framework.parsers import FileUploadParser
 from google.cloud import vision
 from google.cloud.vision_v1 import types
 from django.conf import settings
-import os
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import parser_classes
 from rest_framework.parsers import FileUploadParser
@@ -18,8 +17,9 @@ from allauth.socialaccount.providers.google import views as google_view
 from allauth.socialaccount.providers.kakao import views as kakao_view
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
-import requests, secrets
-
+from dotenv import load_dotenv
+import requests, secrets, os, json, re
+load_dotenv()
 BASE_URL = 'http://localhost:8000/'
 GOOGLE_CALLBACK_URI = BASE_URL + 'accounts/google/login/callback/'
 KAKAO_CALLBACK_URI = BASE_URL + 'accounts/kakao/login/callback/'
@@ -83,8 +83,53 @@ def image(request):
             '{}\nFor more info on error messages, check: '
             'https://cloud.google.com/apis/design/errors'.format(
                 response.error.message))
-    print(text_list)
+    print(text_list[0].split('\n'))
+    b_no, start_dt, p_nm = '', '', ''
+    for text in text_list[0].split('\n'):
+        text = re.sub(r'\s', '', text).split(':')
+        if len(text) > 1:
+            if '등록번호' in text[0] and len(text[1].split('-')) == 3 and not b_no:
+                for t in text[1].split('-'):
+                    b_no += t
+            elif text[0] == '명' or '성 명' in text[0] or '대 표 자' in text[0] or '표 자' in text[0] or '자' in text[0]:
+                if not p_nm:
+                    p_nm += text[1]
+            elif '개업연월일' in text[0]:
+                text[1] = re.findall(r'\d+', text[1])
+                start_dt += "".join(text[1])
+        if b_no and start_dt and p_nm:
+            break
+    result = businesses_check(b_no, start_dt, p_nm)
+    print(result)
+    print(b_no, start_dt, p_nm)
     return JsonResponse({'text': text_list})
+
+def businesses_check(b_no, start_dt, p_nm): #사업자번호, 개업연월일, 대표자 이름
+    data = {
+        "businesses": [
+            {
+            "b_no": b_no,
+            "start_dt": start_dt,
+            "p_nm": p_nm,
+            }
+        ]
+        }
+    url = "https://api.odcloud.kr/api/nts-businessman/v1/validate"
+    service_key = os.getenv("DATA_KEY")
+    response = requests.post(
+    url,
+    params={"serviceKey": service_key},
+    data=json.dumps(data),
+    headers={"Content-Type": "application/json", "Accept": "application/json"}
+    )
+
+    if response.status_code == 200:
+        result = response.json()
+        if result['data'][0].get('status'):
+            return True
+        return False
+    else:
+        return JsonResponse({'error': '제대로 입력되지 않은 항목이 있습니다.'})
 
 def google_login(request):
     """
