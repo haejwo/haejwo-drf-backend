@@ -17,6 +17,8 @@ from allauth.socialaccount.providers.google import views as google_view
 from allauth.socialaccount.providers.kakao import views as kakao_view
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
+from django.views.decorators.http import require_http_methods
+from django.http import HttpResponseNotAllowed
 from dotenv import load_dotenv
 import requests, secrets, os, json, re
 load_dotenv()
@@ -68,7 +70,9 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
 @parser_classes([FileUploadParser])
 @csrf_exempt
+@require_http_methods(['POST'])
 def image(request):
+    print(request.user)
     BASE_DIR = settings.BASE_DIR
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"]=os.path.join(BASE_DIR,"secret.json")
     file_obj = request.FILES.get('image')
@@ -83,7 +87,6 @@ def image(request):
             '{}\nFor more info on error messages, check: '
             'https://cloud.google.com/apis/design/errors'.format(
                 response.error.message))
-    print(text_list[0].split('\n'))
     b_no, start_dt, p_nm = '', '', ''
     for text in text_list[0].split('\n'):
         text = re.sub(r'\s', '', text).split(':')
@@ -99,9 +102,10 @@ def image(request):
                 start_dt += "".join(text[1])
         if b_no and start_dt and p_nm:
             break
-    result = businesses_check(b_no, start_dt, p_nm)
-    print(result)
-    print(b_no, start_dt, p_nm)
+    if businesses_check(b_no, start_dt, p_nm):
+        user = request.user
+        user.company.has_business_license = True
+        user.company.save()
     return JsonResponse({'text': text_list})
 
 def businesses_check(b_no, start_dt, p_nm): #사업자번호, 개업연월일, 대표자 이름
@@ -127,9 +131,7 @@ def businesses_check(b_no, start_dt, p_nm): #사업자번호, 개업연월일, �
         result = response.json()
         if result['data'][0].get('status'):
             return True
-        return False
-    else:
-        return JsonResponse({'error': '제대로 입력되지 않은 항목이 있습니다.'})
+    return False
 
 def google_login(request):
     """

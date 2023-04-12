@@ -89,9 +89,7 @@ REST_FRAMEWORK = {
     ),
 }
 #시리얼라이저 설정
-REST_AUTH_REGISTER_SERIALIZERS = {
-    "REGISTER_SERIALIZER": "accounts.serializers.UserSerializer"
-}
+
 REST_AUTH_SERIALIZERS = {
     'USER_DETAILS_SERIALIZER': 'accounts.serializers.UserSerializer',
 }
@@ -99,6 +97,7 @@ REST_AUTH_SERIALIZERS = {
 
 INSTALLED_APPS = [
     'accounts',
+    'quotes',
     'dj_rest_auth',
     'rest_framework',
     'rest_framework.authtoken',
