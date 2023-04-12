@@ -1,10 +1,9 @@
 from django.urls import path, include
 from rest_framework import routers
-from .views import ProfileViewSet
 from . import views
 
 router = routers.DefaultRouter()
-router.register('', ProfileViewSet)
+router.register('', views.ProfileViewSet)
 
 urlpatterns = [
     path('', include('dj_rest_auth.urls')),
