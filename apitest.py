@@ -1,33 +1,35 @@
-import requests
-import json, os
+import requests, os
 from dotenv import load_dotenv
 load_dotenv()
-# 요청에 필요한 데이터
-data = {
-  "businesses": [
-    {
-      "b_no": "2018187900",
-      "start_dt": "20040702",
-      "p_nm": "박건원",
-    }
-  ]
+
+service_key = os.getenv("KAKAO_REST_API_KEY")
+
+url = "https://dapi.kakao.com/v2/local/search/address.json"
+query = "유현로 2222"
+headers = {
+    "Authorization": f"KakaoAK {service_key}"
 }
 
-# API 엔드포인트 URL과 서비스 키
-url = "https://api.odcloud.kr/api/nts-businessman/v1/validate"
-service_key = os.getenv("DATA_KEY")
+params = {
+    "query": query
+}
 
-# POST 요청 보내기
-response = requests.post(
-    url,
-    params={"serviceKey": service_key},
-    data=json.dumps(data),
-    headers={"Content-Type": "application/json", "Accept": "application/json"}
-)
+response = requests.get(url, headers=headers, params=params)
 
-# 응답 결과 확인
-if response.status_code == 200:
-    result = response.json()
-    print(result['data'][0].get('status'))
+data = response.json().get('documents')
+print(data)
+if data:
+    if len(data) == 1:
+        address_data = data[0]
+        road_data = address_data.get('road_address')
+        road_address, zip_code = '', ''
+        if road_data:
+            road_address = road_data.get('address_name')
+            zip_code = road_data.get('zone_no')
+        old_address = address_data.get('address').get('address_name')
+    else:
+        result = []
+        for i in data:
+            result.append(i.get('address_name'))
 else:
-    print(response.text)  # 에러 메시지 확인
+    print(data)

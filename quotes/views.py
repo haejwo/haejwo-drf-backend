@@ -2,6 +2,12 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import Quote, Comment
 from .serializers import QuoteSerializer, CommentSerializer
+from django.http import JsonResponse
+import requests, os
+from dotenv import load_dotenv
+load_dotenv()
+
+service_key = os.getenv("KAKAO_REST_API_KEY")
 
 class QuoteViewSet(viewsets.ModelViewSet):
     serializer_class = QuoteSerializer
@@ -34,12 +40,10 @@ class CommentViewSet(viewsets.ModelViewSet):
 
         # role이 'CO'이고, category가 'moving'인 경우에만 댓글 작성이 가능하도록 처리
         if role == 'CO' and category == 'moving':
-            # quote_id를 request.data의 복사본에 추가하여 댓글 작성
             quote_id = kwargs['quote_pk']
             data = request.data.copy()
             data['quote'] = quote_id
 
-            # 시리얼라이저를 사용하여 데이터를 직렬화하고 저장
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
             self.perform_create(serializer)
@@ -47,3 +51,34 @@ class CommentViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
         else:
             return Response({"detail": "You do not have permission to create a comment."}, status=status.HTTP_403_FORBIDDEN)
+        
+def search_address(request):
+    query = request.GET.get('address')
+    if not query:
+        return Response({"detail": "주소를 입력해주세요."}, status=status.HTTP_400_BAD_REQUEST)
+    url = "https://dapi.kakao.com/v2/local/search/address.json"
+    headers = {
+        "Authorization": f"KakaoAK {service_key}"
+    }
+    params = {
+        "query": query
+    }
+    response = requests.get(url, headers=headers, params=params)
+    data = response.json().get('documents')
+    if data:
+        if len(data) == 1:
+            address_data = data[0]
+            road_data = address_data.get('road_address')
+            road_address = road_data.get('address_name') if road_data else ''
+            zip_code = road_data.get('zone_no') if road_data else ''
+            old_address = address_data.get('address').get('address_name', '')
+            return Response({
+                "road_address": road_address,
+                "zip_code": zip_code,
+                "old_address": old_address
+            }, status=status.HTTP_200_OK)
+        else:
+            result = [i.get('address_name') for i in data]
+            return Response({"result": result}, status=status.HTTP_200_OK)
+    else:
+        return Response({"detail": "검색 결과가 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
