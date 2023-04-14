@@ -5,7 +5,7 @@ load_dotenv()
 service_key = os.getenv("KAKAO_REST_API_KEY")
 
 url = "https://dapi.kakao.com/v2/local/search/address.json"
-query = "유현로 2222"
+query = "유현로"
 headers = {
     "Authorization": f"KakaoAK {service_key}"
 }
@@ -17,7 +17,6 @@ params = {
 response = requests.get(url, headers=headers, params=params)
 
 data = response.json().get('documents')
-print(data)
 if data:
     if len(data) == 1:
         address_data = data[0]
@@ -31,5 +30,6 @@ if data:
         result = []
         for i in data:
             result.append(i.get('address_name'))
+        print(data)
 else:
     print(data)
