@@ -15,7 +15,7 @@ class Quote(models.Model):
     is_accepted = models.BooleanField(default=False)
 
 
-class Comment(models.Model):
+class QuoteComment(models.Model):
     quote = models.ForeignKey(Quote, on_delete=models.CASCADE, related_name='comments')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     amount = models.IntegerField()

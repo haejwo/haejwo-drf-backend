@@ -1,7 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
-from .models import Quote, Comment
-from .serializers import QuoteSerializer, CommentSerializer
+from .models import Quote, QuoteComment
+from .serializers import QuoteSerializer, QuoteCommentSerializer
 from django.http import JsonResponse
 import requests, os
 from dotenv import load_dotenv
@@ -9,49 +9,72 @@ load_dotenv()
 
 service_key = os.getenv("KAKAO_REST_API_KEY")
 
-class QuoteViewSet(viewsets.ModelViewSet):
-    serializer_class = QuoteSerializer
+class ArticleMixin:
+    app_role = None
+    model = None
 
     def get_queryset(self):
         user = self.request.user
         role = user.role
 
-        # role이 'CO'이고, category가 'moving'인 경우 모든 글 조회
-        if role == 'CO' and user.company.category == 'moving':
-            queryset = Quote.objects.all()
+        if role == 'CO' and user.company.category == self.app_role:
+            queryset = self.model.objects.all()
         else:
-            # 본인의 글만 조회
-            queryset = Quote.objects.filter(customer=user)
+            queryset = self.model.objects.filter(customer=user)
         return queryset
-
-class CommentViewSet(viewsets.ModelViewSet):
-    serializer_class = CommentSerializer
+    
+class CommentMixin:
+    app_role = None
+    app_pk = None
+    model = None
+    parent_model = None
 
     def get_queryset(self):
         # 각 글에 대한 댓글만 조회
-        quote_id = self.kwargs['quote_pk']
-        queryset = Comment.objects.filter(quote_id=quote_id)
+        parent_id = self.kwargs[self.app_pk]
+        parent = self.parent_model.objects.get(pk=parent_id)
+        queryset = parent.comments.all()
         return queryset
 
     def create(self, request, *args, **kwargs):
-        user = self.request.user
-        role = user.role
-        category = user.company.category
-
-        # role이 'CO'이고, category가 'moving'인 경우에만 댓글 작성이 가능하도록 처리
-        if role == 'CO' and category == 'moving':
-            quote_id = kwargs['quote_pk']
-            data = request.data.copy()
-            data['quote'] = quote_id
-
-            serializer = self.get_serializer(data=data)
+        parent_id = self.kwargs[self.app_pk]
+        parent = self.parent_model.objects.get(pk=parent_id)
+        queryset = parent.comments.filter(author=request.user)
+        if queryset.exists():
+            # 이미 댓글이 존재하는 경우, 해당 댓글을 수정
+            instance = queryset.first()
+            data = request.data
+            serializer = self.get_serializer(instance, data=data)
             serializer.is_valid(raise_exception=True)
-            self.perform_create(serializer)
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            self.perform_update(serializer)
+            return Response(serializer.data)
         else:
-            return Response({"detail": "You do not have permission to create a comment."}, status=status.HTTP_403_FORBIDDEN)
+            # 새로운 댓글 작성
+            role = request.user.role
+            category = request.user.company.category
+
+            if role == 'CO' and category == self.app_role:
+                data = request.data
+                serializer = self.get_serializer(data=data)
+                serializer.is_valid(raise_exception=True)
+                self.perform_create(serializer)
+                headers = self.get_success_headers(serializer.data)
+                return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            else:
+                return Response({"detail": "You do not have permission to create a comment."}, status=status.HTTP_403_FORBIDDEN)
         
+class QuoteViewSet(ArticleMixin, viewsets.ModelViewSet):
+    serializer_class = QuoteSerializer
+    app_role = 'moving'
+    model = Quote
+
+class QuoteCommentViewSet(CommentMixin, viewsets.ModelViewSet):
+    serializer_class = QuoteCommentSerializer
+    app_role = 'moving'
+    app_pk = 'quote_pk'
+    model = QuoteComment
+    parent_model = Quote
+
 def search_address(request):
     query = request.GET.get('address')
     if not query:
