@@ -1,6 +1,15 @@
 from django.db import models
 from django.conf import settings
 
+REGION_CHOICES = (
+    ('SGI', '서울/경기/인천'),
+    ('CC', '충청'),
+    ('GW', '강원'),
+    ('JL', '전라'),
+    ('GS', '경상'),
+    ('JJ', '제주'),
+)
+
 # Create your models here.
 class Quote(models.Model):
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
