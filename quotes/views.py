@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Quote, QuoteComment
 from .serializers import QuoteSerializer, QuoteCommentSerializer
@@ -61,7 +62,21 @@ class CommentMixin:
                 headers = self.get_success_headers(serializer.data)
                 return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
             else:
-                return Response({"detail": "You do not have permission to create a comment."}, status=status.HTTP_403_FORBIDDEN)
+                return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+    
+    @action(detail=True, methods=['post'])
+    def matching(self, request, *args, **kwargs):
+        parent_id = self.kwargs[self.app_pk]
+        parent = self.parent_model.objects.get(pk=parent_id)
+        if parent.customer == request.user:
+            comment_id = self.kwargs['pk']
+            comment = self.model.objects.get(pk=comment_id)
+            parent.company = comment.author
+            parent.is_accepted = True
+            parent.save()
+            return Response({"detail": "매칭 완료"})
+        else:
+            return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
         
 class QuoteViewSet(ArticleMixin, viewsets.ModelViewSet):
     serializer_class = QuoteSerializer
