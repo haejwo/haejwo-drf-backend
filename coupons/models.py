@@ -9,8 +9,11 @@ DISCOUNT_TYPES = [
     (DISCOUNT_TYPE_PERCENTAGE, 'Percentage'),
     (DISCOUNT_TYPE_FIXED_AMOUNT, 'Fixed Amount'),
 ]
+class CompanyName(models.Model):
+    name = models.CharField(max_length=20, unique=True)
 
 class Coupon(models.Model):
+    company = models.ForeignKey(CompanyName, on_delete=models.CASCADE)
     code = models.CharField(max_length=20, unique=True)
     discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPES)
     discount_value = models.DecimalField(max_digits=10, decimal_places=2)

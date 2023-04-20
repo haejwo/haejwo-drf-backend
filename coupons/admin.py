@@ -1,6 +1,10 @@
 from django.contrib import admin
-from .models import Coupon
+from .models import Coupon, CompanyName
 # Register your models here.
+
+@admin.register(CompanyName)
+class CompanyNameAdmin(admin.ModelAdmin):
+    list_display = ['name']
 
 @admin.register(Coupon)
 class CouponAdmin(admin.ModelAdmin):
