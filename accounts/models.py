@@ -11,9 +11,9 @@ ROLE_CHOICES = (
     )
 
 CATEGORY_CHOICES = [
-    ('moving', '이사'),
-    ('flower', '꽃'),
-    ('other', '기타'),
+    ('MOVING', '이사'),
+    ('FLOWER', '꽃'),
+    ('OTHER', '기타'),
 ]
 
 class User(AbstractBaseUser, PermissionsMixin):

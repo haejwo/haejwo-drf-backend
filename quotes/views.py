@@ -24,6 +24,39 @@ class ArticleMixin:
             queryset = self.model.objects.filter(customer=user)
         return queryset
     
+    @action(detail=True, methods=['post'])
+    def deposit(self, request, *args, **kwargs):
+        article_id = self.kwargs['pk']
+        article = self.model.objects.get(pk=article_id)
+        if article.customer == request.user:
+            article.status = 'DEPOSIT'
+            article.save()
+            return Response({"detail": "입금 완료"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+    
+    @action(detail=True, methods=['post'])
+    def preparing(self, request, *args, **kwargs):
+        article_id = self.kwargs['pk']
+        article = self.model.objects.get(pk=article_id)
+        if article.company == request.user:
+            article.status = 'PREPARING'
+            article.save()
+            return Response({"detail": "확정 후, 준비중"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+        
+    @action(detail=True, methods=['post'])
+    def completed(self, request, *args, **kwargs):
+        article_id = self.kwargs['pk']
+        article = self.model.objects.get(pk=article_id)
+        if article.company == request.user:
+            article.status = 'COMPLETED'
+            article.save()
+            return Response({"detail": "완료"}, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+    
 class CommentMixin:
     app_role = None
     app_pk = None
@@ -72,20 +105,20 @@ class CommentMixin:
             comment_id = self.kwargs['pk']
             comment = self.model.objects.get(pk=comment_id)
             parent.company = comment.author
-            parent.is_accepted = True
+            parent.status = 'MATCHED'
             parent.save()
-            return Response({"detail": "매칭 완료"})
+            return Response({"detail": "매칭 완료"}, status=status.HTTP_200_OK)
         else:
             return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
         
 class QuoteViewSet(ArticleMixin, viewsets.ModelViewSet):
     serializer_class = QuoteSerializer
-    app_role = 'moving'
+    app_role = 'MOVING'
     model = Quote
 
 class QuoteCommentViewSet(CommentMixin, viewsets.ModelViewSet):
     serializer_class = QuoteCommentSerializer
-    app_role = 'moving'
+    app_role = 'MOVING'
     app_pk = 'quote_pk'
     model = QuoteComment
     parent_model = Quote

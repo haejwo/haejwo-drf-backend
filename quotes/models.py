@@ -9,7 +9,13 @@ REGION_CHOICES = (
     ('GS', '경상'),
     ('JJ', '제주'),
 )
-
+STATUS_CHOICES = (
+        ('MATCHING', '매칭전'),
+        ('MATCHED', '매칭완료'),
+        ('DEPOSIT', '입금완료'),
+        ('PREPARING', '준비중'),
+        ('COMPLETED', '완료'),
+    )
 # Create your models here.
 class Quote(models.Model):
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -21,7 +27,7 @@ class Quote(models.Model):
     end_has_elevator = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     moving_date = models.DateField()
-    is_accepted = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='MATCHING')
 
 
 class QuoteComment(models.Model):
