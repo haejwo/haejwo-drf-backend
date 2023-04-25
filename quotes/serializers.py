@@ -11,4 +11,4 @@ class QuoteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Quote
-        fields = ['id', 'customer', 'company', 'content', 'created_at','start_address','end_address','start_has_elevator','end_has_elevator','moving_date','status', 'comments']
+        fields = ('id', 'customer', 'company', 'content', 'created_at','start_address','end_address','start_has_elevator','end_has_elevator','moving_date','status', 'comments')

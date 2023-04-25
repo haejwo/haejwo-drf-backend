@@ -44,9 +44,3 @@ class UserSerializer(serializers.ModelSerializer):
             ret.pop('customer')
         return ret
     
-class ReviewSerializer(serializers.ModelSerializer):
-    customer_nickname = serializers.CharField(source='user.customer.username', read_only=True)
-
-    class Meta:
-        model = Review
-        fields = ('id', 'company', 'user', 'rating', 'comment', 'created_at', 'customer_nickname')
