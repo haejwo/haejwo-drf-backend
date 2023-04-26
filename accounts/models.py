@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
-from django.core.validators import MinValueValidator, MaxValueValidator
 from .managers import CustomUserManager
 
 # Create your models here.
@@ -46,10 +45,3 @@ class AccountInformation(models.Model):
     username = models.CharField(max_length=20, blank=True)
     bankName = models.CharField(max_length=20, blank=True)
     accountNumber = models.CharField(max_length=30, blank=True)
-
-class Review(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='reviews')
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
-    comment = models.TextField(max_length=500, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)

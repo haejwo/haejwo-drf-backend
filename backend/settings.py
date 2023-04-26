@@ -98,6 +98,8 @@ REST_AUTH_SERIALIZERS = {
 INSTALLED_APPS = [
     'accounts',
     'quotes',
+    'coupons',
+    'utils',
     'dj_rest_auth',
     'rest_framework',
     'rest_framework.authtoken',

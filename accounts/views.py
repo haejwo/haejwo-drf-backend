@@ -21,52 +21,44 @@ from django.views.decorators.http import require_http_methods
 from django.http import HttpResponseNotAllowed
 from dotenv import load_dotenv
 import requests, secrets, os, json, re
+from rest_framework import generics
+from quotes.models import QuoteReview,FlowerReview
+
 load_dotenv()
 BASE_URL = 'http://localhost:8000/'
 GOOGLE_CALLBACK_URI = BASE_URL + 'accounts/google/login/callback/'
 KAKAO_CALLBACK_URI = BASE_URL + 'accounts/kakao/login/callback/'
 
 class ProfileViewSet(viewsets.ModelViewSet):
-    serializer_class = UserSerializer
     queryset = User.objects.all()
 
+    def get_serializer_class(self):
+        role = self.request.user.role
+        if role == 'CO':
+            return CompanySerializer
+        elif role == 'CU':
+            return CustomerSerializer
+        return
+    
     def create(self, request, *args, **kwargs):
         user = request.user
         role = user.role
-
-        # CU role인 경우 Customer 객체 생성
-        if role == 'CU':
-            customer_data = {'user': user.id, 'username': request.data.get('username')}
-            customer_serializer = CustomerSerializer(data=customer_data)
-            if customer_serializer.is_valid():
-                customer_serializer.save()
-                serializer = self.get_serializer(user)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                return Response(customer_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        # CO role인 경우 Company 객체 생성
-        elif role == 'CO':
-            company_data = {'user': user.id, 'username': request.data.get('username'), 'category': request.data.get('category')}
-            company_serializer = CompanySerializer(data=company_data)
-            if company_serializer.is_valid():
-                company = company_serializer.save()
-
-                # Company 객체와 연결된 AccountInformation 객체 생성
-                account_data = {'company': company.id, 'username': request.data.get('username'), 'bankName': request.data.get('bankName'), 'accountNumber': request.data.get('accountNumber')}
-                account_serializer = AccountInformationSerializer(data=account_data)
-                if account_serializer.is_valid():
-                    account_serializer.save()
-                    serializer = self.get_serializer(user)
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
-                else:
-                    # AccountInformation 생성 실패시 Company 객체 삭제
-                    company.delete()
-                    return Response(account_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                return Response(company_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        else:
+        serializer_class = self.get_serializer_class()
+        if serializer_class is None:
             return Response({'error': 'Invalid role.'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        company = serializer.save(user=user)
+        if role == 'CO':
+            account_data = {'company': company.id, 'username': request.data.get('username'), 'bankName': request.data.get('bankName'), 'accountNumber': request.data.get('accountNumber')}
+            account_serializer = AccountInformationSerializer(data=account_data)
+            if account_serializer.is_valid():
+                account_serializer.save()
+            else:
+                # AccountInformation 생성 실패시 Company 객체 삭제
+                company.delete()
+                return Response(account_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)    
 
 @parser_classes([FileUploadParser])
 @csrf_exempt
@@ -286,3 +278,28 @@ class KakaoLogin(SocialLoginView):
     adapter_class = kakao_view.KakaoOAuth2Adapter
     callback_url = KAKAO_CALLBACK_URI
     client_class = OAuth2Client
+
+class ReviewList(generics.ListCreateAPIView):
+    queryset = None
+    serializer_class = ReviewSerializer
+
+    def get_queryset(self):
+        company_id = self.kwargs['pk']
+        company = Company.objects.get(pk=company_id)
+        category = company.category
+        if category == 'MOVING':
+            self.queryset = QuoteReview.objects.all()
+        elif category == 'FLOWER':
+            self.queryset = FlowerReview.objects.all()
+        return self.queryset
+
+    def perform_create(self, serializer):
+        serializer.save(article_id=self.request.data['article'])
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        company_id = self.kwargs['pk']
+        company = Company.objects.get(pk=company_id)
+        category = company.category
+        context['category'] = category
+        return context

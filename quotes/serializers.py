@@ -7,8 +7,8 @@ class QuoteCommentSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class QuoteSerializer(serializers.ModelSerializer):
-    comments = QuoteCommentSerializer(many=True, read_only=True)
+    quote_comments = QuoteCommentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Quote
-        fields = ['id', 'customer', 'company', 'content', 'created_at','start_address','end_address','start_has_elevator','end_has_elevator','moving_date','status', 'comments']
+        fields = ('id', 'customer', 'company', 'content', 'created_at','start_address','end_address','start_has_elevator','end_has_elevator','date','status', 'quote_comments')
