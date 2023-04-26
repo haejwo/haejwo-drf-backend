@@ -64,14 +64,12 @@ class CommentMixin:
     def get_queryset(self):
         # 각 글에 대한 댓글만 조회
         parent_id = self.kwargs[self.app_pk]
-        parent = self.parent_model.objects.get(pk=parent_id)
-        queryset = parent.comments.all()
+        queryset = self.model.objects.filter(article_id=parent_id)
         return queryset
 
     def create(self, request, *args, **kwargs):
         parent_id = self.kwargs[self.app_pk]
-        parent = self.parent_model.objects.get(pk=parent_id)
-        queryset = parent.comments.filter(author=request.user)
+        queryset = self.model.objects.filter(author=request.user)
         if queryset.exists():
             # 이미 댓글이 존재하는 경우, 해당 댓글을 수정
             instance = queryset.first()
@@ -108,7 +106,7 @@ class CommentMixin:
             return Response({"detail": "매칭 완료"}, status=status.HTTP_200_OK)
         else:
             return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
-        
+
 def search_address(request):
     query = request.GET.get('address')
     if not query:

@@ -14,8 +14,6 @@ STATUS_CHOICES = (
     )
 
 class Article(models.Model):
-    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    company = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='quotes_as_company', null=True, blank=True, on_delete=models.CASCADE)
     title = models.CharField(max_length=30)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -36,7 +34,6 @@ class Comment(models.Model):
         ordering = ['amount']
 
 class Review(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name='reviews')
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     comment = models.TextField(max_length=500, blank=True)

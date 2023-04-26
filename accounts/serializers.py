@@ -1,5 +1,6 @@
 from .models import *
 from rest_framework import serializers
+from quotes.models import QuoteReview, FlowerReview
 
 class AccountInformationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -7,20 +8,13 @@ class AccountInformationSerializer(serializers.ModelSerializer):
         fields = ('id', 'company', 'username', 'bankName', 'accountNumber')
 
 class CompanySerializer(serializers.ModelSerializer):
-    review_avg = serializers.SerializerMethodField()
     bank = AccountInformationSerializer(read_only=True)
-    
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
     class Meta:
         model = Company
-        fields = ('id', 'user','username', 'category', 'review_avg', 'bank')
+        fields = ('id', 'user','username', 'category', 'bank')
 
-    def get_review_avg(self, obj):
-        reviews = obj.reviews.all()
-        if reviews.count() == 0:
-            return 0
-        else:
-            return sum([review.rating for review in reviews])/reviews.count()
-        
 
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -43,4 +37,17 @@ class UserSerializer(serializers.ModelSerializer):
         elif role == 'CO':
             ret.pop('customer')
         return ret
+    
+class ReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = None
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        category = kwargs['context']['category']
+        super().__init__(*args, **kwargs)
+        if category == 'MOVING':
+            self.Meta.model = QuoteReview
+        elif category == 'FLOWER':
+            self.Meta.model = FlowerReview
     
