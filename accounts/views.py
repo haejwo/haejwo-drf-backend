@@ -63,7 +63,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
 @parser_classes([FileUploadParser])
 @csrf_exempt
 @require_http_methods(['POST'])
-def image(request):
+def upload_businesses_image(request):
     print(request.user)
     BASE_DIR = settings.BASE_DIR
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"]=os.path.join(BASE_DIR,"secret.json")
@@ -98,7 +98,8 @@ def image(request):
         user = request.user
         user.company.has_business_license = True
         user.company.save()
-    return JsonResponse({'text': text_list})
+        return Response({'등록번호': b_no, '대표자': p_nm, '개업연월일': start_dt}, status=status.HTTP_200_OK)
+    return Response({'detail': '잘못된 사진이거나 올바르지 않은 사업자 등록증 입니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
 def businesses_check(b_no, start_dt, p_nm): #사업자번호, 개업연월일, 대표자 이름
     data = {
