@@ -19,7 +19,8 @@ class Article(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     date = models.DateTimeField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='MATCHING')
-
+    has_review = models.BooleanField(default=False)
+    
     class Meta:
         abstract = True
 
