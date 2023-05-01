@@ -1,6 +1,7 @@
 from .models import *
 from rest_framework import serializers
-from quotes.models import QuoteReview, FlowerReview
+from movequotes.models import MoveQuoteReview
+from flowerquotes.models import FlowerQuoteReview
 
 class AccountInformationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -47,7 +48,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         category = kwargs['context']['category']
         super().__init__(*args, **kwargs)
         if category == 'MOVING':
-            self.Meta.model = QuoteReview
+            self.Meta.model = MoveQuoteReview
         elif category == 'FLOWER':
-            self.Meta.model = FlowerReview
+            self.Meta.model = FlowerQuoteReview
     
