@@ -9,7 +9,6 @@ from google.cloud.vision_v1 import types
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import parser_classes
-from rest_framework.parsers import FileUploadParser
 from django.http import JsonResponse
 from json.decoder import JSONDecodeError
 from allauth.socialaccount.models import SocialAccount
@@ -18,11 +17,11 @@ from allauth.socialaccount.providers.kakao import views as kakao_view
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
 from django.views.decorators.http import require_http_methods
-from django.http import HttpResponseNotAllowed
 from dotenv import load_dotenv
 import requests, secrets, os, json, re
 from rest_framework import generics
-from quotes.models import QuoteReview,FlowerReview
+from movequotes.models import MoveQuoteReview
+from flowerquotes.models import FlowerQuoteReview
 
 load_dotenv()
 BASE_URL = 'http://localhost:8000/'
@@ -289,9 +288,9 @@ class ReviewList(generics.ListCreateAPIView):
         company = Company.objects.get(pk=company_id)
         category = company.category
         if category == 'MOVING':
-            self.queryset = QuoteReview.objects.all()
+            self.queryset = MoveQuoteReview.objects.all()
         elif category == 'FLOWER':
-            self.queryset = FlowerReview.objects.all()
+            self.queryset = FlowerQuoteReview.objects.all()
         return self.queryset
 
     def perform_create(self, serializer):
