@@ -139,12 +139,7 @@ def google_callback(request):
     client_id = os.getenv("GOOGLE_CLIENT_ID")
     client_secret = os.getenv("GOOCLE_CLIENT_SECRET")
     code = request.GET.get('code')
-    GOOGLE_CALLBACK_URI_FRONT = GOOGLE_CALLBACK_URI
-    state = request.GET.get('state')
-    session_state = request.session.get('state') # 세션에서 state 값을 가져옴
-    if state != session_state:
-        return JsonResponse({'err_msg': 'invalid state'}, status=status.HTTP_400_BAD_REQUEST)
-    del request.session['state']
+    GOOGLE_CALLBACK_URI_FRONT = 'http://localhost:3000/oauth/callback/google/'
     token_req = requests.post(
         f"https://oauth2.googleapis.com/token?client_id={client_id}&client_secret={client_secret}&code={code}&grant_type=authorization_code&redirect_uri={GOOGLE_CALLBACK_URI_FRONT}")
     token_req_json = token_req.json()
@@ -182,9 +177,11 @@ def google_callback(request):
         accept = requests.post(
             f"{BASE_URL}accounts/google/login/finish/", data=data)
         accept_status = accept.status_code
+
         if accept_status != 200:
             return JsonResponse({'err_msg': 'failed to signin'}, status=accept_status)
         accept_json = accept.json()
+        print(accept_json)
         return JsonResponse(accept_json)
     except User.DoesNotExist:
         # 기존에 가입된 유저가 없으면 새로 가입
@@ -195,6 +192,7 @@ def google_callback(request):
         if accept_status != 200:
             return JsonResponse({'err_msg': 'failed to signup'}, status=accept_status)
         accept_json = accept.json()
+        print(accept_json)
         return JsonResponse(accept_json)
 
 class GoogleLogin(SocialLoginView):
@@ -238,6 +236,8 @@ def kakao_callback(request):
     """
     # print(kakao_account)
     email = kakao_account.get('email')
+    if not email:
+        return JsonResponse({'err_msg': '이메일 동의 없이는 사용이 불가능 합니다.'}, status=status.HTTP_400_BAD_REQUEST)
     """
     Signup or Signin Request
     """
