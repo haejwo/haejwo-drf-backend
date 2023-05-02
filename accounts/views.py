@@ -26,7 +26,7 @@ from flowerquotes.models import FlowerQuoteReview
 load_dotenv()
 BASE_URL = 'http://localhost:8000/'
 GOOGLE_CALLBACK_URI = BASE_URL + 'accounts/google/login/callback/'
-KAKAO_CALLBACK_URI = BASE_URL + 'accounts/kakao/login/callback/'
+KAKAO_CALLBACK_URI = 'http://localhost:3000/oauth/callback/kakao/'
 
 class ProfileViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -191,7 +191,6 @@ def google_callback(request):
         data = {'access_token': access_token, 'code': code}
         accept = requests.post(
             f"{BASE_URL}accounts/google/login/finish/", data=data)
-        print(accept)
         accept_status = accept.status_code
         if accept_status != 200:
             return JsonResponse({'err_msg': 'failed to signup'}, status=accept_status)
@@ -259,6 +258,7 @@ def kakao_callback(request):
         if accept_status != 200:
             return JsonResponse({'err_msg': 'failed to signin'}, status=accept_status)
         accept_json = accept.json()
+        print(accept_json)
         return JsonResponse(accept_json)
         
     except User.DoesNotExist:
