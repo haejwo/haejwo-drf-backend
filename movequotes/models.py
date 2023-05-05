@@ -4,14 +4,24 @@ from accounts.models import Company
 from django.conf import settings
 
 # Create your models here.
-
+SIZE_CHOICES = (
+    ('SMALL', '소형(20평미만)'),
+    ('BIG', '대형(20평이상)'),
+)
+PACKING_CHOICES = (
+    ('PACKING', '포장'),
+    ('NORMAL', '일반'),
+    ('SEMIPACKING', '반포장'),
+)
 class MoveQuote(Article):
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='customer_move')
     company = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='company_move')
-    start_address = models.CharField(max_length=255)
-    end_address = models.CharField(max_length=255)
-    start_has_elevator = models.BooleanField(default=False)
-    end_has_elevator = models.BooleanField(default=False)
+    size_type = models.CharField(max_length=20, choices=SIZE_CHOICES, default='SMALL')
+    packing_type = models.CharField(max_length=20, choices=PACKING_CHOICES, default='PACKING')
+    customer_support = models.BooleanField(default=False)
+    start_info = models.JSONField(default=dict)
+    end_info = models.JSONField(default=dict)
+    luggage_info = models.JSONField(default=dict)
 
 class MoveQuoteComment(Comment):
     article = models.ForeignKey(MoveQuote, on_delete=models.CASCADE, related_name='move_comments')

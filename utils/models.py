@@ -14,10 +14,11 @@ STATUS_CHOICES = (
     )
 
 class Article(models.Model):
-    title = models.CharField(max_length=30)
+    title = models.CharField(max_length=30, null=True)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    date = models.DateTimeField()
+    date = models.DateField()
+    time = models.TimeField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='MATCHING')
     has_review = models.BooleanField(default=False)
     
