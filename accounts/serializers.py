@@ -18,6 +18,7 @@ class CompanySerializer(serializers.ModelSerializer):
 
 
 class CustomerSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     class Meta:
         model = Customer
         fields = ('id', 'user', 'username')
