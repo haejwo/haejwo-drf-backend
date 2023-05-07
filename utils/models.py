@@ -43,3 +43,9 @@ class Review(models.Model):
 
     class Meta:
         abstract = True
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.article:
+            self.article.has_review = True
+            self.article.save()
