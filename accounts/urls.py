@@ -3,7 +3,7 @@ from rest_framework import routers
 from . import views
 
 router = routers.DefaultRouter()
-router.register('', views.ProfileViewSet)
+router.register('', views.ProfileViewSet, basename='profile')
 
 urlpatterns = [
     path('', include('dj_rest_auth.urls')),

@@ -1,3 +1,4 @@
+from rest_framework.fields import empty
 from .models import *
 from rest_framework import serializers
 from movequotes.models import MoveQuoteReview
@@ -53,3 +54,17 @@ class ReviewSerializer(serializers.ModelSerializer):
         elif category == 'FLOWER':
             self.Meta.model = FlowerQuoteReview
     
+class ProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+
+    class Meta:
+        model = None
+        fields = '__all__'
+    
+    def __init__(self, *args, **kwargs):
+        role = kwargs['context']['role']
+        super().__init__(*args, **kwargs)
+        if role == 'CO':
+            self.Meta.model = Company
+        elif role == 'CU':
+            self.Meta.model = Customer

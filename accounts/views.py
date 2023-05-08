@@ -22,6 +22,7 @@ import requests, secrets, os, json, re
 from rest_framework import generics
 from movequotes.models import MoveQuoteReview
 from flowerquotes.models import FlowerQuoteReview
+from django.db import transaction
 
 load_dotenv()
 BASE_URL = 'http://localhost:8000/'
@@ -29,35 +30,63 @@ GOOGLE_CALLBACK_URI = BASE_URL + 'accounts/google/login/callback/'
 KAKAO_CALLBACK_URI = 'http://localhost:3000/oauth/callback/kakao/'
 
 class ProfileViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
+    serializer_class = ProfileSerializer
 
-    def get_serializer_class(self):
-        role = self.request.user.role
-        if role == 'CO':
-            return CompanySerializer
-        elif role == 'CU':
-            return CustomerSerializer
-        return
+    def get_object(self):
+        user = self.request.user
+        try:
+            if user.role == 'CO':
+                obj = user.company
+            else:
+                obj = user.customer
+        except:
+            obj = None
+        return obj
     
+    def list(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        print(serializer.data)
+        return Response(serializer.data)
+    
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         user = request.user
         role = user.role
-        serializer_class = self.get_serializer_class()
-        if serializer_class is None:
-            return Response({'error': 'Invalid role.'}, status=status.HTTP_400_BAD_REQUEST)
-        serializer = serializer_class(data=request.data)
+        serializer = self.serializer_class(data=request.data, context={'role': role})
         serializer.is_valid(raise_exception=True)
         company = serializer.save(user=user)
         if role == 'CO':
             account_data = {'company': company.id, 'username': request.data.get('username'), 'bankName': request.data.get('bankName'), 'accountNumber': request.data.get('accountNumber')}
             account_serializer = AccountInformationSerializer(data=account_data)
-            if account_serializer.is_valid():
-                account_serializer.save()
-            else:
-                # AccountInformation 생성 실패시 Company 객체 삭제
-                company.delete()
-                return Response(account_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)    
+            account_serializer.is_valid(raise_exception=True)
+            account_serializer.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        role = request.user.role
+        instance = self.get_object()
+        print(instance)
+        serializer = self.serializer_class(instance, data=request.data, context={'role': role})
+        serializer.is_valid(raise_exception=True)
+        company = serializer.save()
+        if role == 'CO':
+            instance = request.user.company.bank
+            print(instance)
+            account_data = {'company': company.id, 'username': request.data.get('username'), 'bankName': request.data.get('bankName'), 'accountNumber': request.data.get('accountNumber')}
+            account_serializer = AccountInformationSerializer(instance, data=account_data)
+            account_serializer.is_valid(raise_exception=True)
+            account_serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        role = self.request.user.role
+        context['role'] = role
+        return context
+
 
 @parser_classes([FileUploadParser])
 @csrf_exempt
