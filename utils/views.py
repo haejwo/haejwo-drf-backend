@@ -22,6 +22,16 @@ class ArticleMixin:
             queryset = self.model.objects.filter(customer=user)
         return queryset
     
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        print(data)
+        data['customer'] = request.user.pk
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
     @action(detail=True, methods=['post'])
     def deposit(self, request, *args, **kwargs):
         article_id = self.kwargs['pk']
@@ -43,7 +53,7 @@ class ArticleMixin:
             return Response({"detail": "확정 후, 준비중"}, status=status.HTTP_200_OK)
         else:
             return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
-        
+
     @action(detail=True, methods=['post'])
     def completed(self, request, *args, **kwargs):
         article_id = self.kwargs['pk']
@@ -84,7 +94,8 @@ class CommentMixin:
             category = request.user.company.category
 
             if role == 'CO' and category == self.app_role:
-                data = request.data
+                data = request.data.copy()
+                data['author'] = request.user.pk
                 serializer = self.get_serializer(data=data)
                 serializer.is_valid(raise_exception=True)
                 self.perform_create(serializer)
