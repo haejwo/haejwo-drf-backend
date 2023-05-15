@@ -32,3 +32,13 @@ class MoveQuoteReview(Review):
 
     class Meta:
         unique_together = ('author', 'article')
+
+def get_upload_path(instance, filename):
+    return f'/movequote/{instance.article.id}/{filename}'
+
+class MoveImage(models.Model):
+    article = models.ForeignKey(MoveQuote, on_delete=models.CASCADE, related_name='move_images')
+    image = models.ImageField(upload_to=get_upload_path)
+
+    def __int__(self):
+        return self.id
