@@ -3,7 +3,6 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 import requests, os
 from dotenv import load_dotenv
-from movequotes.models import MoveImage
 load_dotenv()
 # Create your views here.
 
@@ -12,6 +11,8 @@ service_key = os.getenv("KAKAO_REST_API_KEY")
 class ArticleMixin:
     app_role = None
     model = None
+    image_model = None
+
     def get_queryset(self):
         user = self.request.user
         role = user.role
@@ -23,17 +24,12 @@ class ArticleMixin:
         return queryset
     
     def create(self, request, *args, **kwargs):
-        data = request.data.copy()
-        data['customer'] = request.user.pk
-        print(data)
-        serializer = self.get_serializer(data=data)
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        instance = self.perform_create(serializer)
+        article = serializer.save(customer=request.user)
         image_set = request.FILES
-        print(serializer.data)
-        print(image_set)
         for image_data in image_set.getlist('image'):
-            MoveImage.objects.create(article_id=serializer.data['id'], image=image_data)
+            self.image_model.objects.create(article=article, image=image_data)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
@@ -83,7 +79,6 @@ class CommentMixin:
         return queryset
 
     def create(self, request, *args, **kwargs):
-        parent_id = self.kwargs[self.app_pk]
         queryset = self.model.objects.filter(author=request.user)
         if queryset.exists():
             # 이미 댓글이 존재하는 경우, 해당 댓글을 수정
@@ -99,11 +94,9 @@ class CommentMixin:
             category = request.user.company.category
 
             if role == 'CO' and category == self.app_role:
-                data = request.data.copy()
-                data['author'] = request.user.pk
-                serializer = self.get_serializer(data=data)
+                serializer = self.get_serializer(data=request.data)
                 serializer.is_valid(raise_exception=True)
-                self.perform_create(serializer)
+                self.perform_create(serializer, request.user)
                 headers = self.get_success_headers(serializer.data)
                 return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
             else:
