@@ -17,10 +17,10 @@ data = {
     'luggage_info': {}
 }
 
-image_file_descriptor = open('222.jpg', 'rb')
+image_file_descriptor = open('./222.jpg', 'rb')
 files = {'image': image_file_descriptor}
 headers = {
-    'Authorization': '',
+    'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjg0MjkxODU2LCJpYXQiOjE2ODQyOTE1NTYsImp0aSI6ImVjYTAzNWEzNGYxOTRiZTVhY2RkZWNhZDNmY2JiYzYyIiwidXNlcl9pZCI6MX0.T6UZm3ltXj1iin8bgeoEW6i8BxHwNDI9J1z-x1gtQrI',
 }
 
 response = requests.post(url, data=data, headers=headers, files=files)

@@ -18,15 +18,15 @@ class MoveQuoteCommentSerializer(serializers.ModelSerializer):
 
 class MoveQuoteSerializer(serializers.ModelSerializer):
     move_comments = MoveQuoteCommentSerializer(many=True, read_only=True)
-    # customer = UserSerializer(read_only=True)
-    # company = UserSerializer(read_only=True)
+    customer = UserSerializer(read_only=True)
+    company = UserSerializer(read_only=True)
     images = serializers.SerializerMethodField()
 
     def get_images(self, obj):
         image = obj.move_images.all()
-        print(image)
         return MoveImageSerializer(instance=image, many=True, context=self.context).data
 
     class Meta:
         model = MoveQuote
         fields = '__all__'
+

@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from .models import MoveQuote, MoveQuoteComment
+from .models import MoveQuote, MoveQuoteComment, MoveImage
 from .serializers import MoveQuoteSerializer, MoveQuoteCommentSerializer
 from utils.views import ArticleMixin, CommentMixin
         
@@ -7,6 +7,7 @@ class MoveQuoteViewSet(ArticleMixin, viewsets.ModelViewSet):
     serializer_class = MoveQuoteSerializer
     app_role = 'MOVING'
     model = MoveQuote
+    image_model = MoveImage
 
 class MoveQuoteCommentViewSet(CommentMixin, viewsets.ModelViewSet):
     serializer_class = MoveQuoteCommentSerializer
