@@ -16,13 +16,15 @@ from allauth.socialaccount.providers.google import views as google_view
 from allauth.socialaccount.providers.kakao import views as kakao_view
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
-from django.views.decorators.http import require_http_methods
 from dotenv import load_dotenv
 import requests, secrets, os, json, re
 from rest_framework import generics
 from movequotes.models import MoveQuoteReview
 from flowerquotes.models import FlowerQuoteReview
 from django.db import transaction
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 
 load_dotenv()
 BASE_URL = 'http://localhost:8000/'
@@ -90,9 +92,14 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
 @parser_classes([FileUploadParser])
 @csrf_exempt
-@require_http_methods(['POST'])
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def upload_businesses_image(request):
-    print(request.user)
+    user = request.user
+    if user.role == 'CU':
+        return Response({'detail':'업체만 이용 가능 합니다.'}, status=status.HTTP_400_BAD_REQUEST)
+    if user.company.has_business_license:
+        return Response({'detail':'이미 검증된 고객입니다.'}, status=status.HTTP_400_BAD_REQUEST)
     BASE_DIR = settings.BASE_DIR
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"]=os.path.join(BASE_DIR,"secret.json")
     file_obj = request.FILES.get('image')
@@ -123,7 +130,6 @@ def upload_businesses_image(request):
         if b_no and start_dt and p_nm:
             break
     if businesses_check(b_no, start_dt, p_nm):
-        user = request.user
         user.company.has_business_license = True
         user.company.save()
         return Response({'등록번호': b_no, '대표자': p_nm, '개업연월일': start_dt}, status=status.HTTP_200_OK)
@@ -323,7 +329,9 @@ class ReviewList(generics.ListCreateAPIView):
         return self.queryset
 
     def perform_create(self, serializer):
-        serializer.save(article_id=self.request.data['article'])
+        article_id = self.request.data.get('article')
+        author = self.request.user
+        serializer.save(article_id=article_id, author=author)
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
