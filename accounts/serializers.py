@@ -3,6 +3,7 @@ from .models import *
 from rest_framework import serializers
 from movequotes.models import MoveQuoteReview
 from flowerquotes.models import FlowerQuoteReview
+from django.apps import apps
 
 class AccountInformationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -41,6 +42,11 @@ class UserSerializer(serializers.ModelSerializer):
             ret.pop('customer')
         return ret
     
+app_labels = {
+            'MOVE':'movequotes',
+            'FLOWER':'flowerquotes',
+        }
+    
 class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = None
@@ -49,10 +55,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         category = kwargs['context']['category']
         super().__init__(*args, **kwargs)
-        if category == 'MOVING':
-            self.Meta.model = MoveQuoteReview
-        elif category == 'FLOWER':
-            self.Meta.model = FlowerQuoteReview
+        self.Meta.model = apps.get_model(app_label=app_labels.get(category, ''), model_name=category.capitalize() + 'QuoteReview')
     
 class ProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
