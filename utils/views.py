@@ -2,6 +2,8 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 import requests, os
+from django.apps import apps
+from accounts.models import Company
 from dotenv import load_dotenv
 load_dotenv()
 # Create your views here.
@@ -79,11 +81,13 @@ class CommentMixin:
         return queryset
 
     def create(self, request, *args, **kwargs):
-        queryset = self.model.objects.filter(author=request.user)
+        queryset = self.model.objects.filter(article_id=kwargs['article_pk'],author=request.user)
+        data = request.data.copy()
+        data['article'] = kwargs['article_pk']
         if queryset.exists():
             # 이미 댓글이 존재하는 경우, 해당 댓글을 수정
             instance = queryset.first()
-            data = request.data
+        
             serializer = self.get_serializer(instance, data=data)
             serializer.is_valid(raise_exception=True)
             self.perform_update(serializer)
@@ -92,11 +96,10 @@ class CommentMixin:
             # 새로운 댓글 작성
             role = request.user.role
             category = request.user.company.category
-
             if role == 'CO' and category == self.app_role:
-                serializer = self.get_serializer(data=request.data)
+                serializer = self.get_serializer(data=data)
                 serializer.is_valid(raise_exception=True)
-                self.perform_create(serializer, request.user)
+                serializer.save(author=request.user)
                 headers = self.get_success_headers(serializer.data)
                 return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
             else:
@@ -146,3 +149,26 @@ def search_address(request):
             return Response({"result": result}, status=status.HTTP_200_OK)
     else:
         return Response({"detail": "검색 결과가 없습니다."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+app_labels = {
+            'MOVE':'movequotes',
+            'FLOWER':'flowerquotes',
+        }
+
+class CategoryMixin:
+    def get_company(self):
+        company = Company.objects.get(pk=self.kwargs['company_pk'])
+        category = company.category
+        app_label = app_labels.get(category, '')
+        return app_label, category, company
+
+    def get_category(self):
+        app_label, category, _ = self.get_company()
+        model = apps.get_model(app_label=app_label, model_name=category.capitalize() + 'QuoteReview')
+        return model, category
+    
+    def get_article(self):
+        app_label, category, company = self.get_company()
+        model = apps.get_model(app_label=app_label, model_name=category.capitalize() + 'Quote')
+        return model, company

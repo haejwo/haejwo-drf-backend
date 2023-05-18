@@ -1,3 +1,4 @@
+from typing import Any
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import *
@@ -19,12 +20,15 @@ from dj_rest_auth.registration.views import SocialLoginView
 from dotenv import load_dotenv
 import requests, secrets, os, json, re
 from rest_framework import generics
-from movequotes.models import MoveQuoteReview
-from flowerquotes.models import FlowerQuoteReview
+from movequotes.models import MoveQuoteReview, MoveQuote
+from flowerquotes.models import FlowerQuoteReview, FlowerQuote
 from django.db import transaction
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError
+from django.apps import apps
+from utils.views import CategoryMixin
 
 load_dotenv()
 BASE_URL = 'http://localhost:8000/'
@@ -70,7 +74,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         role = request.user.role
         instance = self.get_object()
-        print(instance)
+        print(request.data)
         serializer = self.serializer_class(instance, data=request.data, context={'role': role})
         serializer.is_valid(raise_exception=True)
         company = serializer.save()
@@ -91,7 +95,6 @@ class ProfileViewSet(viewsets.ModelViewSet):
 
 
 @parser_classes([FileUploadParser])
-@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def upload_businesses_image(request):
@@ -314,29 +317,36 @@ class KakaoLogin(SocialLoginView):
     callback_url = KAKAO_CALLBACK_URI
     client_class = OAuth2Client
 
-class ReviewList(generics.ListCreateAPIView):
-    queryset = None
+app_labels = {
+            'MOVE':'movequotes',
+            'FLOWER':'flowerquotes',
+        }
+
+class ReviewViewset(CategoryMixin, viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
 
     def get_queryset(self):
-        company_id = self.kwargs['pk']
-        company = Company.objects.get(pk=company_id)
-        category = company.category
-        if category == 'MOVING':
-            self.queryset = MoveQuoteReview.objects.all()
-        elif category == 'FLOWER':
-            self.queryset = FlowerQuoteReview.objects.all()
-        return self.queryset
+        model, _ = self.get_category()
+        queryset = model.objects.all()
+        return queryset
 
     def perform_create(self, serializer):
         article_id = self.request.data.get('article')
-        author = self.request.user
-        serializer.save(article_id=article_id, author=author)
+        article_model, company = self.get_article()
+        article = article_model.objects.get(pk=article_id)
+        if article.company:
+            if article.company != company.user:
+                raise ValidationError({'err':'회사가 다릅니다.'})
+            article.has_review = True
+            article.save()
+            author = self.request.user
+            serializer.save(article_id=article_id, author=author)
+        else:
+            raise ValidationError({'err':'매칭이 안됐습니다.'})
+
+
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        company_id = self.kwargs['pk']
-        company = Company.objects.get(pk=company_id)
-        category = company.category
-        context['category'] = category
+        context['category'] = self.get_category()[1]
         return context

@@ -10,7 +10,7 @@ ROLE_CHOICES = (
     )
 
 CATEGORY_CHOICES = [
-    ('MOVING', '이사'),
+    ('MOVE', '이사'),
     ('FLOWER', '꽃'),
     ('OTHER', '기타'),
 ]
