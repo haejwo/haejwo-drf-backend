@@ -37,7 +37,8 @@ class ArticleMixin:
     
     def update_article_status(self, article_id, status):
         article = self.model.objects.get(pk=article_id)
-        if article.company == self.request.user:
+        article_user = article.customer if status == 'DEPOSIT' else article.company
+        if article_user == self.request.user:
             article.status = status
             article.save()
             return Response({"detail": "상태가 변경되었습니다."}, status=status.HTTP_200_OK)
