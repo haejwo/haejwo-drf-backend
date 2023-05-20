@@ -35,38 +35,26 @@ class ArticleMixin:
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
-    @action(detail=True, methods=['post'])
-    def deposit(self, request, *args, **kwargs):
-        article_id = self.kwargs['pk']
+    def update_article_status(self, article_id, status):
         article = self.model.objects.get(pk=article_id)
-        if article.customer == request.user:
-            article.status = 'DEPOSIT'
+        if article.company == self.request.user:
+            article.status = status
             article.save()
-            return Response({"detail": "입금 완료"}, status=status.HTTP_200_OK)
-        else:
-            return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
-    
-    @action(detail=True, methods=['post'])
-    def preparing(self, request, *args, **kwargs):
-        article_id = self.kwargs['pk']
-        article = self.model.objects.get(pk=article_id)
-        if article.company == request.user:
-            article.status = 'PREPARING'
-            article.save()
-            return Response({"detail": "확정 후, 준비중"}, status=status.HTTP_200_OK)
+            return Response({"detail": "상태가 변경되었습니다."}, status=status.HTTP_200_OK)
         else:
             return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
 
     @action(detail=True, methods=['post'])
+    def deposit(self, request, *args, **kwargs):
+        return self.update_article_status(self.kwargs['pk'], 'DEPOSIT')
+
+    @action(detail=True, methods=['post'])
+    def preparing(self, request, *args, **kwargs):
+        return self.update_article_status(self.kwargs['pk'], 'PREPARING')
+
+    @action(detail=True, methods=['post'])
     def completed(self, request, *args, **kwargs):
-        article_id = self.kwargs['pk']
-        article = self.model.objects.get(pk=article_id)
-        if article.company == request.user:
-            article.status = 'COMPLETED'
-            article.save()
-            return Response({"detail": "완료"}, status=status.HTTP_200_OK)
-        else:
-            return Response({"detail": "권한이 없습니다."}, status=status.HTTP_403_FORBIDDEN)
+        return self.update_article_status(self.kwargs['pk'], 'COMPLETED')
 
 class CommentMixin:
     app_role = None
