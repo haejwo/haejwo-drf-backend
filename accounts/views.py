@@ -1,4 +1,3 @@
-from typing import Any
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from .models import *
@@ -8,7 +7,6 @@ from rest_framework.parsers import FileUploadParser
 from google.cloud import vision
 from google.cloud.vision_v1 import types
 from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import parser_classes
 from django.http import JsonResponse
 from json.decoder import JSONDecodeError
@@ -20,15 +18,13 @@ from dj_rest_auth.registration.views import SocialLoginView
 from dotenv import load_dotenv
 import requests, secrets, os, json, re
 from rest_framework import generics
-from movequotes.models import MoveQuoteReview, MoveQuote
-from flowerquotes.models import FlowerQuoteReview, FlowerQuote
 from django.db import transaction
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
-from django.apps import apps
 from utils.views import CategoryMixin
+from rest_framework.permissions import AllowAny
 
 load_dotenv()
 BASE_URL = 'http://localhost:8000/'
@@ -52,7 +48,6 @@ class ProfileViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance)
-        print(serializer.data)
         return Response(serializer.data)
     
     @transaction.atomic
@@ -74,13 +69,11 @@ class ProfileViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         role = request.user.role
         instance = self.get_object()
-        print(request.data)
         serializer = self.serializer_class(instance, data=request.data, context={'role': role})
         serializer.is_valid(raise_exception=True)
         company = serializer.save()
         if role == 'CO':
             instance = request.user.company.bank
-            print(instance)
             account_data = {'company': company.id, 'username': request.data.get('username'), 'bankName': request.data.get('bankName'), 'accountNumber': request.data.get('accountNumber')}
             account_serializer = AccountInformationSerializer(instance, data=account_data)
             account_serializer.is_valid(raise_exception=True)
@@ -91,6 +84,11 @@ class ProfileViewSet(viewsets.ModelViewSet):
         context = super().get_serializer_context()
         role = self.request.user.role
         context['role'] = role
+        return context
+    
+    def serializer_context(self):
+        context = super().serializer_context()
+        context['request'] = self.request
         return context
 
 
@@ -350,3 +348,8 @@ class ReviewViewset(CategoryMixin, viewsets.ModelViewSet):
         context = super().get_serializer_context()
         context['category'] = self.get_category()[1]
         return context
+
+class CompanyList(generics.ListAPIView):
+    queryset = Company.objects.all()
+    serializer_class = CompanySerializer
+    permission_classes = [AllowAny]

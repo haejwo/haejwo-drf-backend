@@ -11,12 +11,25 @@ class AccountInformationSerializer(serializers.ModelSerializer):
         fields = ('id', 'company', 'username', 'bankName', 'accountNumber')
 
 class CompanySerializer(serializers.ModelSerializer):
-    bank = AccountInformationSerializer(read_only=True)
+    bank = serializers.SerializerMethodField()
     user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Company
         fields = '__all__'
+
+    def get_bank(self, obj):
+        request = self.context.get('request')
+        if request:
+            url = request.get_full_path()
+            if url != '/accounts/companies/' and url[-7:] != 'quotes/':
+                user = request.user
+                category = obj.category
+                model = apps.get_model(app_label=app_labels.get(category, ''), model_name=category.capitalize() + 'Quote')
+                answer = model.objects.filter(customer=user, company=obj.user).exists()
+                if obj.user == user or answer:
+                    return AccountInformationSerializer(obj.bank).data
+        return None
 
 
 class CustomerSerializer(serializers.ModelSerializer):
