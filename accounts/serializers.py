@@ -22,11 +22,21 @@ class CompanySerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request:
             url = request.get_full_path()
+            url_int = ''
+            cnt = 2
+            while url[-cnt].isdigit():
+                url_int += url[-cnt]
+                cnt += 1
             if url != '/accounts/companies/' and url[-7:] != 'quotes/':
                 user = request.user
                 category = obj.category
-                model = apps.get_model(app_label=app_labels.get(category, ''), model_name=category.capitalize() + 'Quote')
-                answer = model.objects.filter(customer=user, company=obj.user).exists()
+                answer = False
+                if url_int:
+                    url_int = int(url_int[::-1])
+                    model = apps.get_model(app_label=app_labels.get(category, ''), model_name=category.capitalize() + 'Quote')
+                    article = model.objects.get(pk=url_int)
+                    if article.customer == user and article.company == obj.user:
+                        answer = True
                 if obj.user == user or answer:
                     return AccountInformationSerializer(obj.bank).data
         return None
