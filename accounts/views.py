@@ -85,6 +85,11 @@ class ProfileViewSet(viewsets.ModelViewSet):
         role = self.request.user.role
         context['role'] = role
         return context
+    
+    def serializer_context(self):
+        context = super().serializer_context()
+        context['request'] = self.request
+        return context
 
 
 @parser_classes([FileUploadParser])
