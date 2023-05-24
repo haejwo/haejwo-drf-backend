@@ -32,11 +32,15 @@ class User(AbstractBaseUser, PermissionsMixin):
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     username = models.CharField(max_length=20, blank=True)
-    
+
+def get_upload_path(instance, filename):
+    return f'company/{instance.pk}/{filename}'
+
 class Company(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     username = models.CharField(max_length=20, blank=True)
     category = models.CharField(max_length=10, choices=CATEGORY_CHOICES, default='other')
+    profile_img = models.ImageField(upload_to=get_upload_path, blank=True)
     has_business_license = models.BooleanField(default=False)
     has_cdl = models.BooleanField(default=False)
 

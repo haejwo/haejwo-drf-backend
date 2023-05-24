@@ -58,6 +58,9 @@ class ProfileViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         company = serializer.save(user=user)
         if role == 'CO':
+            if request.FILES.get('image'):
+                company.profile_image = request.FILES.get('image')
+                company.save()
             account_data = {'company': company.id, 'username': request.data.get('username'), 'bankName': request.data.get('bankName'), 'accountNumber': request.data.get('accountNumber')}
             account_serializer = AccountInformationSerializer(data=account_data)
             account_serializer.is_valid(raise_exception=True)
@@ -73,6 +76,9 @@ class ProfileViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         company = serializer.save()
         if role == 'CO':
+            if request.FILES.get('image'):
+                company.profile_image = request.FILES.get('image')
+                company.save()
             instance = request.user.company.bank
             account_data = {'company': company.id, 'username': request.data.get('username'), 'bankName': request.data.get('bankName'), 'accountNumber': request.data.get('accountNumber')}
             account_serializer = AccountInformationSerializer(instance, data=account_data)
