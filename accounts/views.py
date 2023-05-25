@@ -30,7 +30,6 @@ load_dotenv()
 BASE_URL = 'http://localhost:8000/'
 GOOGLE_CALLBACK_URI = BASE_URL + 'accounts/google/login/callback/'
 KAKAO_CALLBACK_URI = 'http://localhost:3000/oauth/callback/kakao/'
-
 class ProfileViewSet(viewsets.ModelViewSet):
     serializer_class = ProfileSerializer
 
@@ -59,7 +58,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
         company = serializer.save(user=user)
         if role == 'CO':
             if request.FILES.get('image'):
-                company.profile_image = request.FILES.get('image')
+                company.profile_img = request.FILES.get('image')
                 company.save()
             account_data = {'company': company.id, 'username': request.data.get('username'), 'bankName': request.data.get('bankName'), 'accountNumber': request.data.get('accountNumber')}
             account_serializer = AccountInformationSerializer(data=account_data)
@@ -67,7 +66,7 @@ class ProfileViewSet(viewsets.ModelViewSet):
             account_serializer.save()
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         role = request.user.role
@@ -77,7 +76,11 @@ class ProfileViewSet(viewsets.ModelViewSet):
         company = serializer.save()
         if role == 'CO':
             if request.FILES.get('image'):
-                company.profile_image = request.FILES.get('image')
+                folder_path = f'media/company/{request.user.pk}/'
+                if os.path.exists(folder_path):
+                    for file in os.listdir(folder_path):
+                        os.remove(os.path.join(folder_path, file))
+                company.profile_img = request.FILES.get('image')
                 company.save()
             instance = request.user.company.bank
             account_data = {'company': company.id, 'username': request.data.get('username'), 'bankName': request.data.get('bankName'), 'accountNumber': request.data.get('accountNumber')}
