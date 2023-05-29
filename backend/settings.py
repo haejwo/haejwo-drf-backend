@@ -28,7 +28,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['127.0.0.1','localhost','Haejwo2023-env.eba-ekhq2ein.us-east-1.elasticbeanstalk.com']
 
 REST_USE_JWT = True # JWT 사용 여부
 JWT_AUTH_COOKIE = 'my-app-auth' # 호출할 Cookie Key값
@@ -199,6 +199,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
