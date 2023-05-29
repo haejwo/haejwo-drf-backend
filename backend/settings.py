@@ -28,7 +28,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-ALLOWED_HOSTS = ['127.0.0.1','localhost','Haejwo2023-env.eba-ekhq2ein.us-east-1.elasticbeanstalk.com']
+ALLOWED_HOSTS = ['127.0.0.1','localhost','Haejwo-2023-bean-env.eba-fbddx2ht.us-east-1.elasticbeanstalk.com']
 
 REST_USE_JWT = True # JWT 사용 여부
 JWT_AUTH_COOKIE = 'my-app-auth' # 호출할 Cookie Key값
