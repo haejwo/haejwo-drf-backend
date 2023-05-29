@@ -32,6 +32,7 @@ jobs:
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
           application_name: "haejwo-2023-bean"
           environment_name: "Haejwo-2023-bean-env"
           version_label: "python-${{ steps.format-time.outputs.replaced }}"
