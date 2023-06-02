@@ -13,7 +13,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 from pathlib import Path
 from dotenv import load_dotenv
 import os
-
+from datetime import timedelta
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -87,6 +87,22 @@ REST_FRAMEWORK = {
         'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
     ),
 }
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # 액세스 토큰 유효 기간
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # 리프레시 토큰 유효 기간
+    # 'ROTATE_REFRESH_TOKENS': False,  # 리프레시 토큰 재생성 여부
+    # 'BLACKLIST_AFTER_ROTATION': False,  # 토큰 재생성 후 기존 토큰 무효화 여부
+    # 'ALGORITHM': 'HS256',  # 암호화 알고리즘
+    # 'SIGNING_KEY': SECRET_KEY,  # 서명 키
+    # 'VERIFYING_KEY': None,  # 검증 키
+    # 'AUTH_HEADER_TYPES': ('Bearer',),  # 인증 헤더 유형
+    # 'USER_ID_FIELD': 'id',  # 사용자 ID 필드
+    # 'USER_ID_CLAIM': 'user_id',  # 사용자 ID 클레임
+    # 'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),  # 인증 토큰 클래스
+    # 'TOKEN_TYPE_CLAIM': 'token_type',  # 토큰 타입 클레임
+}
+
 #시리얼라이저 설정
 
 REST_AUTH_SERIALIZERS = {
