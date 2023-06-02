@@ -8,10 +8,7 @@ from django.conf import settings
 class FlowerQuote(Article):
     customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='customer_flower')
     company = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='company_flower')
-    start_address = models.CharField(max_length=255)
     end_address = models.CharField(max_length=255)
-    start_has_elevator = models.BooleanField(default=False)
-    end_has_elevator = models.BooleanField(default=False)
 
 class FlowerQuoteComment(Comment):
     article = models.ForeignKey(FlowerQuote, on_delete=models.CASCADE, related_name='flower_comments')
@@ -22,3 +19,10 @@ class FlowerQuoteReview(Review):
 
     class Meta:
         unique_together = ('author', 'article')
+
+def get_upload_path(instance, filename):
+    return f'flowerquote/{instance.article.id}/{filename}'
+
+class FlowerImage(models.Model):
+    article = models.ForeignKey(FlowerQuote, on_delete=models.CASCADE, related_name='flower_images')
+    image = models.ImageField(upload_to=get_upload_path)
