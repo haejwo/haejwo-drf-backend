@@ -324,11 +324,6 @@ class KakaoLogin(SocialLoginView):
     callback_url = KAKAO_CALLBACK_URI
     client_class = OAuth2Client
 
-app_labels = {
-            'MOVE':'movequotes',
-            'FLOWER':'flowerquotes',
-        }
-
 class ReviewViewset(CategoryMixin, viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
 
@@ -350,9 +345,7 @@ class ReviewViewset(CategoryMixin, viewsets.ModelViewSet):
             serializer.save(article_id=article_id, author=author)
         else:
             raise ValidationError({'err':'매칭이 안됐습니다.'})
-
-
-
+        
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['category'] = self.get_category()[1]
