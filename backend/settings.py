@@ -27,8 +27,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
+SERVER_URL = os.getenv('SERVER_URL')
+ALLOWED_HOSTS = ['127.0.0.1','localhost', SERVER_URL]
 
-ALLOWED_HOSTS = ['127.0.0.1','localhost','Haejwo-2023-bean-env.eba-3btkdyun.ap-northeast-2.elasticbeanstalk.com']
 
 REST_USE_JWT = True # JWT 사용 여부
 JWT_AUTH_COOKIE = 'my-app-auth' # 호출할 Cookie Key값
@@ -83,7 +84,7 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        # 'rest_framework.authentication.SessionAuthentication', #local8000에서 테스트용
+        'rest_framework.authentication.SessionAuthentication', #local8000에서 테스트용
         'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
     ),
 }

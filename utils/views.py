@@ -35,11 +35,11 @@ class ArticleMixin:
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
-    def update_article_status(self, article_id, status):
+    def update_article_status(self, article_id, cur_status):
         article = self.model.objects.get(pk=article_id)
-        article_user = article.customer if status == 'DEPOSIT' else article.company
+        article_user = article.customer if cur_status == 'DEPOSIT' else article.company
         if article_user == self.request.user:
-            article.status = status
+            article.status = cur_status
             article.save()
             return Response({"detail": "상태가 변경되었습니다."}, status=status.HTTP_200_OK)
         else:
