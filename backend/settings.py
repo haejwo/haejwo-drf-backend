@@ -30,6 +30,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 SERVER_URL = os.getenv('SERVER_URL')
 ALLOWED_HOSTS = ['127.0.0.1','localhost', SERVER_URL]
 
+
 REST_USE_JWT = True # JWT 사용 여부
 JWT_AUTH_COOKIE = 'my-app-auth' # 호출할 Cookie Key값
 JWT_AUTH_REFRESH_COOKIE = 'my-refresh-token' # Refresh Token Cookie Key 값
