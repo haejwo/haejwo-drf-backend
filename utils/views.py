@@ -31,6 +31,13 @@ class ArticleMixin:
         queryset = self.model.objects.filter(company=company).exclude(status='COMPLETED')
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['get'])
+    def get_completed(self, request, pk=None):
+        company = request.user
+        queryset = self.model.objects.filter(company=company, status='COMPLETED')
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
