@@ -25,6 +25,13 @@ class ArticleMixin:
             queryset = self.model.objects.filter(customer=user)
         return queryset
     
+    @action(detail=False, methods=['get'])
+    def get_selected(self, request, pk=None):
+        company = request.user
+        queryset = self.model.objects.filter(company=company).exclude(status='COMPLETED')
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
