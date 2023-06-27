@@ -51,7 +51,7 @@ class ArticleMixin:
     
     def update_article_status(self, article_id, cur_status):
         article = self.model.objects.get(pk=article_id)
-        article_user = article.customer if cur_status == 'DEPOSIT' else article.company
+        article_user = article.customer
         if article_user == self.request.user:
             article.status = cur_status
             article.save()
