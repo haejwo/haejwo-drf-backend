@@ -337,8 +337,8 @@ class ReviewViewset(CategoryMixin, viewsets.ModelViewSet):
         article_model, company = self.get_article()
         article = article_model.objects.get(pk=article_id)
         if article.company:
-            if article.company != company.user:
-                raise ValidationError({'err':'회사가 다릅니다.'})
+            if article.company != company.user or article.customer != self.request.user:
+                raise ValidationError({'err':'회사가 다르거나 글 작성한 사람이 아닙니다.'})
             article.has_review = True
             article.save()
             author = self.request.user
