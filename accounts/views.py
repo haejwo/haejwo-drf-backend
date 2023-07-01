@@ -355,3 +355,19 @@ class CompanyList(generics.ListAPIView):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
     permission_classes = [AllowAny]
+
+
+class AllReviewsList(generics.ListAPIView):
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        flower_reviews = FlowerQuoteReview.objects.all()
+        move_reviews = MoveQuoteReview.objects.all()
+        all_reviews = flower_reviews.union(move_reviews)
+        all_reviews = all_reviews.order_by('-created_at')
+        return all_reviews
+
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = ReviewSerializer(queryset, many=True, context={'category':'FLOWER'})
+        return Response(serializer.data)

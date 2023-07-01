@@ -11,35 +11,36 @@ class AccountInformationSerializer(serializers.ModelSerializer):
         fields = ('id', 'company', 'username', 'bankName', 'accountNumber')
 
 class CompanySerializer(serializers.ModelSerializer):
-    bank = serializers.SerializerMethodField()
+    # bank = serializers.SerializerMethodField() # 계좌 정보 숨겨야 할시 사용
+    bank = AccountInformationSerializer(read_only=True)
     user = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = Company
         fields = '__all__'
 
-    def get_bank(self, obj):
-        request = self.context.get('request')
-        if request:
-            url = request.get_full_path()
-            url_int = ''
-            cnt = 2
-            while url[-cnt].isdigit():
-                url_int += url[-cnt]
-                cnt += 1
-            if url != '/accounts/companies/' and url[-7:] != 'quotes/':
-                user = request.user
-                category = obj.category
-                answer = False
-                if url_int:
-                    url_int = int(url_int[::-1])
-                    model = apps.get_model(app_label=app_labels.get(category, ''), model_name=category.capitalize() + 'Quote')
-                    article = model.objects.get(pk=url_int)
-                    if article.customer == user and article.company == obj.user:
-                        answer = True
-                if obj.user == user or answer:
-                    return AccountInformationSerializer(obj.bank).data
-        return None
+    # def get_bank(self, obj): # 계좌 정보 숨겨야 할 시 사용
+    #     request = self.context.get('request')
+    #     if request:
+    #         url = request.get_full_path()
+    #         url_int = ''
+    #         cnt = 2
+    #         while url[-cnt].isdigit():
+    #             url_int += url[-cnt]
+    #             cnt += 1
+    #         if url != '/accounts/companies/' and url[-7:] != 'quotes/':
+    #             user = request.user
+    #             category = obj.category
+    #             answer = False
+    #             if url_int:
+    #                 url_int = int(url_int[::-1])
+    #                 model = apps.get_model(app_label=app_labels.get(category, ''), model_name=category.capitalize() + 'Quote')
+    #                 article = model.objects.get(pk=url_int)
+    #                 if article.customer == user and article.company == obj.user:
+    #                     answer = True
+    #             if obj.user == user or answer:
+    #                 return AccountInformationSerializer(obj.bank).data
+    #     return None
 
 
 class CustomerSerializer(serializers.ModelSerializer):
